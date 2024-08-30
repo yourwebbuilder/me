@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="style.css">
+  <title>Live Comments</title>
+</head>
+<body>
+
+  <div id="mks">
+   
+     
+    <div id="foldable-container" class="foldable-container">
+      <div>
+        <label for="userName">Your Name:</label>
+        <input type="text" id="userName" required>
+      </div>
+      <div>
+        <label for="userIcon">Select your user icon:</label>
+        <select id="userIcon" required>
+          <option value="icon1">Icon 1</option>
+          <option value="icon2">Icon 2</option>
+          <option value="icon3">Icon 3</option>
+          <!-- Add more options as needed -->
+        </select>
+      </div>
+      <button id="updateUserInfo">SignUp</button>
+    </div>
+  </div>
+ </div>
+
+<style>
+  #mks {
+  height: 100%; /* Set height to fill the entire height of its parent */
+  width: 100%; /* Set width to fill the entire width of its parent */
+  background-color: #000000dc; /* Set background color */
+ position: absolute;
+}
+</style>
+
+  
+  <div class="container">
+
+    <!-- Form for submitting comments -->
+    <form id="commentForm">
+      <label for="comment">Comment:</label>
+      <textarea id="comment" required></textarea>
+      <!-- Comment count display -->
+      <div id="commentCount" class="comment-count">0</div>
+      <button type="submit">Submit Comment</button>
+    </form>
+
+    <!-- Section to display comments -->
+    <div id="comments" class="comments-container">
+      <!-- Comments will be displayed here -->
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/4.3.0/firebase.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
