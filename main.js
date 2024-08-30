@@ -1,8 +1,29 @@
-// Global variables for WebRTC
-let peerConnection;
-let dataChannel;
-let remoteDataChannel;
-const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] }; // STUN server for NAT traversal
+
+// Initialize Firebase
+// Replace with your Firebase project configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDgY9qT22cGrA7d46axjzJT5g5EZ2SxsRw",
+  authDomain: "mextube-2b3e3.firebaseapp.com",
+  databaseURL: "https://mextube-2b3e3-default-rtdb.firebaseio.com",
+  projectId: "mextube-2b3e3",
+  storageBucket: "mextube-2b3e3.appspot.com",
+  messagingSenderId: "821910922346",
+  appId: "1:821910922346:web:b7f79bb310793978de1613"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+// Reference to the Firebase database
+function getCommentsRef() {
+  // Get the current page URL
+  const url = window.location.href;
+  
+  // Extract the page identifier from the URL
+  const pageId = extractPageIdFromUrl(url);
+  
+  // Return the Firebase database reference for the specific page
+  return firebase.database().ref('comments/' + pageId);
+}
 
 // Retrieve user information from local storage
 let userName = localStorage.getItem('userName');
@@ -35,100 +56,58 @@ function showUserInfo() {
   document.getElementById('mks').style.display = 'block';
 }
 
-// WebRTC setup
-function createPeerConnection() {
-  peerConnection = new RTCPeerConnection(configuration);
+// Form submission event listener
+document.getElementById('commentForm').addEventListener('submit', submitComment);
 
-  // Create a Data Channel
-  dataChannel = peerConnection.createDataChannel("commentsChannel");
-  dataChannel.onopen = handleChannelStatusChange;
-  dataChannel.onclose = handleChannelStatusChange;
-  dataChannel.onmessage = receiveMessage;
-
-  // Listen for ICE candidates and send them to the other peer
-  peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      console.log("New ICE candidate:", event.candidate);
-      // Send ICE candidate to the other peer (use a manual signaling mechanism)
-    }
-  };
-
-  // Listen for the remote data channel
-  peerConnection.ondatachannel = (event) => {
-    remoteDataChannel = event.channel;
-    remoteDataChannel.onmessage = receiveMessage;
-  };
-}
-
-// Function to handle status changes in the DataChannel
-function handleChannelStatusChange(event) {
-  if (dataChannel) {
-    const state = dataChannel.readyState;
-    if (state === "open") {
-      console.log("Data channel is open.");
-    } else {
-      console.log("Data channel is closed.");
-    }
-  }
-}
-
-// Function to submit a comment
+// Function to submit comment
 function submitComment(e) {
   e.preventDefault();
   const commentText = document.getElementById('comment').value;
-
-  // Send comment to the other peer
-  dataChannel.send(JSON.stringify({
-    name: userName,
-    comment: commentText,
-    icon: userIcon
-  }));
-
-  // Display the comment locally
-  displayComment({
+  
+  // Push comment to Firebase database
+  getCommentsRef().push({
     name: userName,
     comment: commentText,
     icon: userIcon
   });
 
-  // Clear the comment textarea
+  // Clear comment textarea
   document.getElementById('comment').value = '';
 }
 
-// Function to display a comment
-function displayComment(commentData) {
+// Display comments
+getCommentsRef().on('value', function(snapshot) {
   const commentsContainer = document.getElementById('comments');
-  
-  const commentDiv = document.createElement('div');
-  commentDiv.classList.add('comment');
+  commentsContainer.innerHTML = '';
 
-  const iconImg = document.createElement('img');
-  iconImg.src = getIconSrc(commentData.icon);
-  iconImg.alt = 'User Icon';
+  snapshot.forEach(function(childSnapshot) {
+    const commentData = childSnapshot.val();
+    
+    const commentDiv = document.createElement('div');
+    commentDiv.classList.add('comment');
 
-  const commentContent = document.createElement('div');
-  const commentHeader = document.createElement('div');
-  commentHeader.innerHTML = '<strong>' + commentData.name + '</strong> says:';
-  const commentBody = document.createElement('p');
-  commentBody.textContent = commentData.comment;
+    const iconImg = document.createElement('img');
+    iconImg.src = getIconSrc(commentData.icon);
+    iconImg.alt = 'User Icon';
 
-  commentContent.appendChild(commentHeader);
-  commentContent.appendChild(commentBody);
+    const commentContent = document.createElement('div');
+    const commentHeader = document.createElement('div');
+    commentHeader.innerHTML = '<strong>' + commentData.name + '</strong> says:';
+    const commentBody = document.createElement('p');
+    commentBody.textContent = commentData.comment;
 
-  commentDiv.appendChild(iconImg);
-  commentDiv.appendChild(commentContent);
+    commentContent.appendChild(commentHeader);
+    commentContent.appendChild(commentBody);
 
-  commentsContainer.appendChild(commentDiv);
+    commentDiv.appendChild(iconImg);
+    commentDiv.appendChild(commentContent);
+
+    commentsContainer.appendChild(commentDiv);
+  });
 
   // Update comment count
-  document.getElementById('commentCount').textContent = commentsContainer.children.length;
-}
-
-// Function to receive a message from the other peer
-function receiveMessage(event) {
-  const message = JSON.parse(event.data);
-  displayComment(message);
-}
+  document.getElementById('commentCount').textContent = snapshot.numChildren();
+});
 
 // Function to get icon source based on user's selected icon
 function getIconSrc(icon) {
@@ -145,36 +124,19 @@ function getIconSrc(icon) {
 }
 
 // Toggle comments visibility when textarea is clicked
+// Assuming this code is placed after the DOM has loaded
 document.getElementById('comments').classList.add('active');
 
-// Manually handle the signaling process
-function startCall() {
-  createPeerConnection();
 
-  // Create an offer to start the connection
-  peerConnection.createOffer().then(offer => {
-    return peerConnection.setLocalDescription(offer);
-  }).then(() => {
-    console.log("Offer created. Share this offer with the other peer:", peerConnection.localDescription);
-    // Manually send this offer to the other peer
-  });
-}
-
-function answerCall(offer) {
-  createPeerConnection();
-
-  // Set the remote offer received from the other peer
-  peerConnection.setRemoteDescription(new RTCSessionDescription(offer)).then(() => {
-    // Create an answer to the offer
-    return peerConnection.createAnswer();
-  }).then(answer => {
-    return peerConnection.setLocalDescription(answer);
-  }).then(() => {
-    console.log("Answer created. Share this answer with the other peer:", peerConnection.localDescription);
-    // Manually send this answer to the other peer
-  });
-}
-
-function addIceCandidate(candidate) {
-  peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+function extractPageIdFromUrl(url) {
+  // Example URL: http://example.com/play1.html
+  // Extract the part of the URL after the last '/' and before '.html'
+  const match = url.match(/\/([^/]+)\.html$/);
+  if (match && match[1]) {
+    // If there's a match and a captured group, return the captured group
+    return match[1];
+  } else {
+    // If no match or captured group, return a default value or handle the error as needed
+    return 'defaultPageId';
+  }
 }
