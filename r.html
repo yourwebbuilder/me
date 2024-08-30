@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Run Edited Code</title>
+</head>
+<body>
+  <iframe id="outputFrame" frameborder="0" width="100%" height="100%"></iframe>
+  <style>
+    iframe{
+      position: fixed;
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/4.3.0/firebase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/firebase@9.3.0/dist/firebase-database.js"></script>
+  <script>
+    // Initialize Firebase (ADD YOUR OWN DATA)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgY9qT22cGrA7d46axjzJT5g5EZ2SxsRw",
+  authDomain: "mextube-2b3e3.firebaseapp.com",
+  databaseURL: "https://mextube-2b3e3-default-rtdb.firebaseio.com",
+  projectId: "mextube-2b3e3",
+  storageBucket: "mextube-2b3e3.appspot.com",
+  messagingSenderId: "821910922346",
+  appId: "1:821910922346:web:b7f79bb310793978de1613",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const codeRef = firebase.database().ref('code');
+
+    codeRef.on('value', (snapshot) => {
+      const code = snapshot.val();
+      document.getElementById('outputFrame').srcdoc = code;
+    });
+  </script>
+</body>
+</html>
