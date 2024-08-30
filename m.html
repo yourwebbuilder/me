@@ -4,18 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebRTC Peer Connection</title>
+    <style>
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        video {
+            width: 300px;
+            height: 200px;
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>WebRTC Peer Connection</h1>
-    <button onclick="startConnection()">Start Connection</button>
-    <div>
-        <h2>Your Public IP</h2>
-        <p id="public-ip">Fetching...</p>
-        <h2>Peer ID</h2>
-        <p id="peer-id">Generating...</p>
+    <div id="container">
+        <button onclick="startConnection()">Start Connection</button>
+        <div>
+            <h2>Your Public IP</h2>
+            <p id="public-ip">Fetching...</p>
+            <h2>Peer ID</h2>
+            <p id="peer-id">Generating...</p>
+        </div>
+        <div>
+            <h2>Connect to Peer</h2>
+            <input type="text" id="peer-ip-input" placeholder="Enter peer's public IP" />
+            <button onclick="connectToPeer()">Connect</button>
+        </div>
+        <video id="local-video" autoplay muted></video>
+        <video id="remote-video" autoplay></video>
     </div>
-    <video id="local-video" autoplay muted></video>
-    <video id="remote-video" autoplay></video>
 
     <script>
         const peerConnectionConfig = {
@@ -24,6 +45,7 @@
 
         let localStream;
         let peerConnection;
+        let signalingChannel = null;
 
         async function fetchPublicIP() {
             try {
@@ -53,7 +75,6 @@
 
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
-                    // Send the ICE candidate to the other peer
                     console.log('ICE Candidate:', event.candidate);
                 }
             };
@@ -68,9 +89,33 @@
             peerConnection.createOffer()
                 .then((offer) => peerConnection.setLocalDescription(offer))
                 .then(() => {
-                    // Send the offer to the other peer
                     console.log('Offer:', peerConnection.localDescription);
                 });
+        }
+
+        async function connectToPeer() {
+            const peerIp = document.getElementById('peer-ip-input').value.trim();
+            if (!peerIp) {
+                alert('Please enter a peer IP address.');
+                return;
+            }
+
+            // Placeholder: Normally you would use a signaling server to send this offer to the other peer
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+
+            // Simulate receiving offer from peer
+            console.log('Simulate sending offer to peer:', offer);
+
+            // Simulate receiving offer from peer and setting remote description
+            // This should be replaced with actual signaling mechanism
+            peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    console.log('ICE Candidate:', event.candidate);
+                }
+            };
         }
 
         function handleSignalMessage(message) {
@@ -92,7 +137,6 @@
                 .then(() => peerConnection.createAnswer())
                 .then((answer) => peerConnection.setLocalDescription(answer))
                 .then(() => {
-                    // Send the answer to the other peer
                     console.log('Answer:', peerConnection.localDescription);
                 });
         }
